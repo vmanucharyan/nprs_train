@@ -45,3 +45,10 @@ group :development do
   gem 'spring'
 end
 
+gem 'react-rails'
+gem 'grape'
+gem "paperclip", "~> 5.0.0.beta1"
+gem 'devise'
+gem 'rails_admin'
+gem 'pg'
+gem 'grape-entity'
