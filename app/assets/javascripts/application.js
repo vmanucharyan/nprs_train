@@ -17,3 +17,6 @@
 //= require react_ujs
 //= require components
 //= require_tree .
+//= require encoding
+//= require encoding-indexes
+//= require pako
