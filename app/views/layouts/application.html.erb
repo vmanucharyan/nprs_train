@@ -5,10 +5,13 @@
   <%= stylesheet_link_tag    'application', media: 'all', 'data-turbolinks-track' => true %>
   <%= javascript_include_tag 'application', 'data-turbolinks-track' => true %>
   <%= csrf_meta_tags %>
+
 </head>
 <body>
 
 <%= yield %>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pako/1.0.1/pako.js"></script>
 
 </body>
 </html>

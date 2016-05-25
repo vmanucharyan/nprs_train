@@ -16,6 +16,15 @@ class V1::SourceImages < Grape::API
         img = SourceImage.find(params[:id])
         { trace_url: img.trace.url }
       end
+
+      get :trace_file do
+        img = SourceImage.find(params[:id])
+
+        content_type "application/octet-stream"
+        env['api.format'] = :binary
+        header['Content-Disposition'] = "attachment; filename=#{img.trace_file_name}"
+        File::open(img.trace.path).read
+      end
     end
 
     desc 'post source image'

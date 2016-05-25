@@ -37,7 +37,7 @@ class SourceImage < ActiveRecord::Base
       return if @updating_trace
       @updating_trace = true
 
-      tmp_name = Dir::Tmpname.create(['a', '.zip']) { }
+      tmp_name = Dir::Tmpname.create(['trace']) { }
 
       Rails.logger.info("running command: nprs-trace #{self.picture.path} #{tmp_name}")
 
