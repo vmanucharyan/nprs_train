@@ -104,9 +104,26 @@ class ImageView extends React.Component {
     e.preventDefault();
     e.stopPropagation();
 
+    const clientPos = { x: e.clientX, y: e.clientY };
+
+    const newZoom = this.state.zoom - (e.deltaY / this.refs.canvas.height);
+
+    const m1 = this.mapPointToImageCoords(clientPos, newZoom);
+    const m2 = this.mapPointToImageCoords(clientPos, this.state.zoom);
+
+    const d = {
+      x: (m2.x - m1.x) * newZoom,
+      y: (m2.y - m1.y) * newZoom
+    };
+
     this.setState({
-      zoom: this.state.zoom - (e.deltaY / this.refs.canvas.height)
+      imagePos: {
+        x: this.state.imagePos.x - d.x,
+        y: this.state.imagePos.y - d.y
+      },
+      zoom: newZoom
     });
+
     this.redrawImage();
   }
 
@@ -143,7 +160,7 @@ class ImageView extends React.Component {
     );
   }
 
-  mapPointToImageCoords(p) {
+  mapPointToImageCoords(p, zoom, imagePos) {
     function clientPos(canvas) {
       const rect = canvas.getBoundingClientRect();
       return {
@@ -155,9 +172,19 @@ class ImageView extends React.Component {
     const canvas = this.refs.canvas;
     const canvasPos = clientPos(canvas);
 
+    const z = zoom || this.state.zoom;
+    const pos = imagePos || this.state.imagePos;
+
     return {
-      x: (canvasPos.x - this.state.imagePos.x) / this.state.zoom,
-      y: (canvasPos.y - this.state.imagePos.y) / this.state.zoom
+      x: (canvasPos.x - pos.x) / z,
+      y: (canvasPos.y - pos.y) / z
+    };
+  }
+
+  mapImageCoordToCanvas(p) {
+    return {
+      x: p.x * this.state.zoom + this.state.imagePos.x,
+      y: p.y * this.state.zoom + this.state.imagePos.y
     };
   }
 
