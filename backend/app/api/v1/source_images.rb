@@ -27,6 +27,11 @@ class V1::SourceImages < Grape::API
       end
     end
 
+    desc 'get source images (paginated)'
+    get do
+      present SourceImage.last(10)
+    end
+
     desc 'post source image'
     params do
       requires :picture, type: Rack::Multipart::UploadedFile, desc: "source image"
@@ -36,6 +41,7 @@ class V1::SourceImages < Grape::API
       img = SourceImage.create!(picture: picture)
       present img
     end
+
   end
 
 end

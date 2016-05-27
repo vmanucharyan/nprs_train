@@ -22,6 +22,8 @@ import imagemin from 'gulp-imagemin';
 import pngquant from 'imagemin-pngquant';
 import runSequence from 'run-sequence';
 import ghPages from 'gulp-gh-pages';
+import proxy from 'proxy-middleware';
+import url from 'url';
 
 const paths = {
   bundle: 'app.js',
@@ -49,9 +51,13 @@ gulp.task('clean', cb => {
 });
 
 gulp.task('browserSync', () => {
+  const proxyOptions = url.parse('http://localhost:3000/api');
+  proxyOptions.route = '/api';
+
   browserSync({
     server: {
-      baseDir: './'
+      baseDir: './',
+      middleware: [proxy(proxyOptions)]
     }
   });
 });
