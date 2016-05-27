@@ -10,7 +10,8 @@ class ImageView extends React.Component {
       dragEntered: false,
       dragEnterPos: { x: -1, y: -1 },
       image: null,
-      imagePos: { x: 0, y: 0 }
+      imagePos: { x: 0, y: 0 },
+      zoom: 1.0
     };
   }
 
@@ -23,11 +24,13 @@ class ImageView extends React.Component {
   }
 
   onImageClick(e) {
-    const args = {
-      texCoordX: e.pageX,
-      texCoordY: e.pageY
-    };
-    this.props.onImageClick(args);
+    const p = { x: e.clientX, y: e.clientY };
+    const tp = this.mapPointToImageCoords(p);
+
+    this.props.onImageClick({
+      texCoordX: Math.round(tp.x),
+      texCoordY: Math.round(tp.y)
+    });
   }
 
   onImageMouseDown(e) {
@@ -41,9 +44,6 @@ class ImageView extends React.Component {
   }
 
   onImageMouseUp(e) {
-    console.log('mouse up');
-    console.log(this.state);
-
     const ep = this.state.dragEnterPos;
 
     if (this.state.dragEntered) {
@@ -58,8 +58,6 @@ class ImageView extends React.Component {
     if (e.pageX === ep.x && e.pageY === ep.y) {
       this.onImageClick(e);
     }
-
-    console.log(this.state);
   }
 
   onImageMouseMove(e) {
@@ -73,12 +71,7 @@ class ImageView extends React.Component {
     }
   }
 
-  onImageMouseDoubleClick(e) {
-    console.log('double click');
-  }
-
   onImageDragEntered(e) {
-    console.log('drag entered');
     this.setState({
       dragEnterPos: { x: e.clientX, y: e.clientY }
     });
@@ -88,33 +81,15 @@ class ImageView extends React.Component {
     const ep = this.state.dragEnterPos;
     const offset = { x: e.pageX - ep.x, y: e.pageY - ep.y };
 
-    console.log('image drag');
-    console.log(offset);
-
-    const canvas = this.refs.canvas;
-    const ctx = canvas.getContext('2d');
-
     const imagePos = {
       x: this.state.imagePos.x + offset.x,
       y: this.state.imagePos.y + offset.y
     };
 
-    ctx.fillStyle = '#202020';
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-    ctx.drawImage(
-      this.state.image,
-      0, 0,
-      this.state.image.width, this.state.image.height,
-      imagePos.x, imagePos.y,
-      canvas.width, canvas.height
-    );
+    this.redrawImage(imagePos);
   }
 
   onImageDragLeave(e) {
-    console.log('drag leave');
-    console.log(this.state);
-
     const ep = this.state.dragEnterPos;
     const offset = { x: ep.x - e.pageX, y: ep.y - e.pageY };
     this.setState({
@@ -125,16 +100,65 @@ class ImageView extends React.Component {
     });
   }
 
+  onImageWheel(e) {
+    e.preventDefault();
+    e.stopPropagation();
+
+    this.setState({
+      zoom: this.state.zoom - (e.deltaY / this.refs.canvas.height)
+    });
+    this.redrawImage();
+  }
+
   updateImage(src) {
     const img = new Image;
     const canvas = this.refs.canvas;
-    const ctx = canvas.getContext('2d');
     img.onload = () => {
       canvas.height = canvas.width * (img.height / img.width);
-      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-      this.setState({ image: img });
+      this.setState({
+        image: img,
+        zoom: canvas.height / img.height
+      });
+      this.redrawImage({ x: 0, y: 0 });
     };
     img.src = src;
+  }
+
+  redrawImage(pos) {
+    const canvas = this.refs.canvas;
+    const ctx = canvas.getContext('2d');
+    const img = this.state.image;
+
+    const imgPos = pos || this.state.imagePos;
+
+    ctx.fillStyle = '#202020';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    ctx.drawImage(
+      img,
+      0, 0,
+      img.width, img.height,
+      imgPos.x, imgPos.y,
+      (img.width * this.state.zoom), (img.height * this.state.zoom)
+    );
+  }
+
+  mapPointToImageCoords(p) {
+    function clientPos(canvas) {
+      const rect = canvas.getBoundingClientRect();
+      return {
+        x: p.x - rect.left,
+        y: p.y - rect.top
+      };
+    }
+
+    const canvas = this.refs.canvas;
+    const canvasPos = clientPos(canvas);
+
+    return {
+      x: (canvasPos.x - this.state.imagePos.x) / this.state.zoom,
+      y: (canvasPos.y - this.state.imagePos.y) / this.state.zoom
+    };
   }
 
   render() {
@@ -148,7 +172,7 @@ class ImageView extends React.Component {
         onMouseDown={this.onImageMouseDown.bind(this)}
         onMouseUp={this.onImageMouseUp.bind(this)}
         onMouseMove={this.onImageMouseMove.bind(this)}
-        onDoubleClick={this.onImageMouseDoubleClick.bind(this)}
+        onWheel={this.onImageWheel.bind(this)}
       ></canvas>
     );
   }

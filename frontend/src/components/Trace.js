@@ -17,18 +17,13 @@ export class Trace extends React.Component {
   }
 
   onImageClick(e) {
-    console.log(this.state);
-    console.log(e);
-
     if (!this.state.regionsMap) {
-      console.log('regions_map undefined');
       return;
     }
 
     console.log(`click [${e.texCoordX}, ${e.texCoordY}]`);
 
-    const regions = this.state.regionsMap[e.pageY][e.pageX];
-    this.setState({ text: regions.toString() });
+    const regions = this.state.regionsMap[e.texCoordY][e.texCoordX];
 
     console.log(regions);
   }
@@ -39,18 +34,12 @@ export class Trace extends React.Component {
     oReq.responseType = 'arraybuffer';
 
     oReq.onload = () => {
-      console.log('received trace response');
-      console.log('spawning worker');
-
       const worker = work(require('../workers/LoadTraceWorker.js')); // eslint-disable-line max-len, global-require
 
       worker.postMessage([oReq.response]);
 
       this.setState({ text: 'loading...' });
       worker.onmessage = (e) => {
-        console.log('received from worker');
-        console.log(e);
-
         const parsed = JSON.parse(e.data[0]);
 
         this.setState({
