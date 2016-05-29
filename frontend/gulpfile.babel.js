@@ -54,10 +54,13 @@ gulp.task('browserSync', () => {
   const proxyOptions = url.parse('http://localhost:3000/api');
   proxyOptions.route = '/api';
 
+  const systemProxyOptions = url.parse('http://localhost:3000/system');
+  systemProxyOptions.route = '/system';
+
   browserSync({
     server: {
       baseDir: './',
-      middleware: [proxy(proxyOptions)]
+      middleware: [proxy(proxyOptions), proxy(systemProxyOptions)]
     }
   });
 });

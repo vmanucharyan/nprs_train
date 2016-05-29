@@ -7,11 +7,9 @@ const App = ({ children }) => (
       </div>
     </div>
 
-    <div className="container">
-      <section className="np-body">
-        {children || 'Welcome to React Starterify'}
-      </section>
-    </div>
+    <section className="np-body">
+      {children || 'Welcome to React Starterify'}
+    </section>
   </t>
 );
 

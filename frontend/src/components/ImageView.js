@@ -9,18 +9,25 @@ class ImageView extends React.Component {
     this.state = {
       dragEntered: false,
       dragEnterPos: { x: -1, y: -1 },
-      image: null,
       imagePos: { x: 0, y: 0 },
       zoom: 1.0
     };
   }
 
   componentDidMount() {
-    this.updateImage(this.props.src);
+    console.log('ImageView mounted');
+    console.log(this.props);
+
+    this.updateImage(this.props.image);
   }
 
   componentWillReceiveProps(newProps) {
-    this.updateImage(newProps.src);
+    console.log('ImageView received props');
+    console.log(newProps);
+
+    if (newProps.image !== this.props.image) {
+      this.updateImage(newProps.image);
+    }
   }
 
   onImageClick(e) {
@@ -106,57 +113,66 @@ class ImageView extends React.Component {
 
     const clientPos = { x: e.clientX, y: e.clientY };
 
-    const newZoom = this.state.zoom - (e.deltaY / this.refs.canvas.height);
+    let newZoom = this.state.zoom - (e.deltaY / this.refs.canvas.height);
+    newZoom = Math.max(0.1, newZoom);
+    newZoom = Math.min(10.0, newZoom);
 
     const m1 = this.mapPointToImageCoords(clientPos, newZoom);
     const m2 = this.mapPointToImageCoords(clientPos, this.state.zoom);
 
-    const d = {
-      x: (m2.x - m1.x) * newZoom,
-      y: (m2.y - m1.y) * newZoom
+    const newPos = {
+      x: this.state.imagePos.x - ((m2.x - m1.x) * newZoom),
+      y: this.state.imagePos.y - ((m2.y - m1.y) * newZoom)
     };
 
     this.setState({
-      imagePos: {
-        x: this.state.imagePos.x - d.x,
-        y: this.state.imagePos.y - d.y
-      },
+      imagePos: newPos,
       zoom: newZoom
     });
 
-    this.redrawImage();
+    this.redrawImage(newPos, newZoom);
   }
 
-  updateImage(src) {
-    const img = new Image;
+  updateImage(img) {
     const canvas = this.refs.canvas;
-    img.onload = () => {
-      canvas.height = canvas.width * (img.height / img.width);
-      this.setState({
-        image: img,
-        zoom: canvas.height / img.height
-      });
-      this.redrawImage({ x: 0, y: 0 });
+
+    canvas.width = canvas.clientWidth;
+    canvas.height = canvas.clientHeight;
+
+    const z = canvas.height / img.height * 0.95;
+    const p = {
+      x: Math.abs(canvas.width - img.width * z) * 0.5,
+      y: Math.abs(canvas.height - img.height * z) * 0.5
     };
-    img.src = src;
+
+    this.setState({ zoom: z, imagePos: p });
+
+    this.redrawImage(p, z);
+    canvas.onresize = () => this.redrawImage();
   }
 
-  redrawImage(pos) {
+  redrawImage(pos, zoom) {
     const canvas = this.refs.canvas;
+
+    canvas.width = canvas.clientWidth;
+    canvas.height = canvas.clientHeight;
+
     const ctx = canvas.getContext('2d');
-    const img = this.state.image;
+    const img = this.props.image;
 
     const imgPos = pos || this.state.imagePos;
 
     ctx.fillStyle = '#202020';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
+    const z = zoom || this.state.zoom;
+
     ctx.drawImage(
       img,
       0, 0,
       img.width, img.height,
       imgPos.x, imgPos.y,
-      (img.width * this.state.zoom), (img.height * this.state.zoom)
+      (img.width * z), (img.height * z)
     );
   }
 
@@ -190,26 +206,29 @@ class ImageView extends React.Component {
 
   render() {
     return (
-      <canvas
-        ref="canvas"
-        width="1000"
-        height="600"
-        className={`responsive-img ${this.props.className}`}
-        disabled={this.props.disabled}
-        onMouseDown={this.onImageMouseDown.bind(this)}
-        onMouseUp={this.onImageMouseUp.bind(this)}
-        onMouseMove={this.onImageMouseMove.bind(this)}
-        onWheel={this.onImageWheel.bind(this)}
-      ></canvas>
+      <div className="np-image-container np-fullscreen">
+        <canvas
+          ref="canvas"
+          width={this.winWidth}
+          height={this.state.winHeight}
+          className={`np-fullscreen ${this.props.className}`}
+          disabled={this.props.disabled}
+          onMouseDown={this.onImageMouseDown.bind(this)}
+          onMouseUp={this.onImageMouseUp.bind(this)}
+          onMouseMove={this.onImageMouseMove.bind(this)}
+          onWheel={this.onImageWheel.bind(this)}
+        ></canvas>
+      </div>
     );
   }
 }
 
 ImageView.propTypes = {
-  src: React.PropTypes.string,
   className: React.PropTypes.string,
   onImageClick: React.PropTypes.func,
-  disabled: React.PropTypes.bool
+  disabled: React.PropTypes.bool,
+  image: React.PropTypes.object,
+  selectedRegions: React.PropTypes.array
 };
 
 export default ImageView;
