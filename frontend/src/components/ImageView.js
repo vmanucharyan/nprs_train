@@ -1,4 +1,4 @@
-/* eslint-disable react/jsx-no-bind */
+/* eslint-disable react/jsx-no-bind*/
 
 import React from 'react';
 
@@ -15,18 +15,25 @@ class ImageView extends React.Component {
   }
 
   componentDidMount() {
-    console.log('ImageView mounted');
-    console.log(this.props);
-
     this.updateImage(this.props.image);
   }
 
   componentWillReceiveProps(newProps) {
-    console.log('ImageView received props');
+    console.log('ImageView receive props');
     console.log(newProps);
 
     if (newProps.image !== this.props.image) {
       this.updateImage(newProps.image);
+    }
+
+    if ((newProps.chosenRegions !== this.props.chosenRegions) ||
+        (newProps.selectedRegion) !== this.props.selectedRegion) {
+      this.redrawImage(
+        this.state.imagePos,
+        this.state.zoom,
+        newProps.chosenRegions,
+        newProps.selectedRegion
+      );
     }
   }
 
@@ -69,6 +76,13 @@ class ImageView extends React.Component {
 
   onImageMouseMove(e) {
     const ep = this.state.dragEnterPos;
+
+    const p = this.mapPointToImageCoords({ x: e.clientX, y: e.clientY });
+    if (this.props.onMouseMove) {
+      this.props.onMouseMove({
+        texCoordX: Math.round(p.x), texCoordY: Math.round(p.y)
+      });
+    }
 
     if (!this.state.dragEntered && (ep.x !== -1 && ep.y !== -1)) {
       this.setState({ dragEntered: true });
@@ -151,7 +165,12 @@ class ImageView extends React.Component {
     canvas.onresize = () => this.redrawImage();
   }
 
-  redrawImage(pos, zoom) {
+  redrawImage(pos, zoom, chosenRegions_, selectedRegion) {
+    console.log('redrawing image');
+    console.log(selectedRegion);
+
+    const chosenRegions = chosenRegions_ || this.props.chosenRegions;
+
     const canvas = this.refs.canvas;
 
     canvas.width = canvas.clientWidth;
@@ -174,6 +193,41 @@ class ImageView extends React.Component {
       imgPos.x, imgPos.y,
       (img.width * z), (img.height * z)
     );
+
+    this.redrawRegions(chosenRegions, selectedRegion, z, imgPos);
+  }
+
+  redrawRegions(regions_, selectedRegion_, zoom_, imagePos_) {
+    const regions = regions_;
+    const zoom = zoom_ || this.state.zoom;
+    const imagePos = imagePos_ || this.state.imagePos;
+
+    const canvas = this.refs.canvas;
+    const ctx = canvas.getContext('2d');
+
+    const drawRegion = (r, style) => {
+      /* eslint-disable no-underscore-dangle,  */
+      const b = r.bounds;
+      const x = b._field0.x;
+      const y = b._field0.y;
+      const width = b._field1.x - b._field0.x;
+      const height = b._field1.y - b._field0.y;
+
+      ctx.beginPath();
+      ctx.lineWidth = '1';
+      ctx.strokeStyle = style;
+      ctx.rect(x, y, width, height);
+      ctx.stroke();
+      /* esline-enable no-underscore-dangle */
+    };
+
+    ctx.transform(zoom, 0, 0, zoom, imagePos.x, imagePos.y);
+    regions.forEach((r) => drawRegion(r, 'red'));
+
+    if (selectedRegion_) {
+      console.log('drawing selected region');
+      drawRegion(selectedRegion_, 'teal');
+    }
   }
 
   mapPointToImageCoords(p, zoom, imagePos) {
@@ -228,7 +282,9 @@ ImageView.propTypes = {
   onImageClick: React.PropTypes.func,
   disabled: React.PropTypes.bool,
   image: React.PropTypes.object,
-  selectedRegions: React.PropTypes.array
+  chosenRegions: React.PropTypes.array,
+  selectedRegion: React.PropTypes.object,
+  onMouseMove: React.PropTypes.func
 };
 
 export default ImageView;

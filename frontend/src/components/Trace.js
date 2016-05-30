@@ -13,7 +13,9 @@ export class Trace extends React.Component {
       text: '[10, 12, 14]',
       loaded: false,
       selectedRegions: [],
-      image: null
+      chosenRegions: [],
+      image: null,
+      selectedRegion: null
     };
     this.onImageClick.bind(this);
     this.regions = null;
@@ -25,23 +27,37 @@ export class Trace extends React.Component {
   }
 
   onImageClick(e) {
-    console.log(`click [${e.texCoordX}, ${e.texCoordY}]`);
-    console.log(this);
-
     if (!this.regionsMap) {
       return;
     }
 
     const regionsIndexes = this.regionsMap[e.texCoordY][e.texCoordX];
-    this.setState({
-      selectedRegions: regionsIndexes
+    const regions = regionsIndexes.map((idx) => {
+      const r = this.regions[idx];
+      r.idx = idx;
+      return r;
     });
 
-    console.log(regionsIndexes);
+    this.setState({
+      selectedRegions: regions
+    });
+  }
 
-    const regions = regionsIndexes.map((idx) => this.regions[idx]);
+  onImageMouseMove(e) {
+    if (!this.regionsMap) {
+      return;
+    }
 
-    console.log(regions);
+    const regionsIndexes = this.regionsMap[e.texCoordY][e.texCoordX];
+    const regions = regionsIndexes.map((idx) => {
+      const r = this.regions[idx];
+      r.idx = idx;
+      return r;
+    });
+
+    this.setState({
+      selectedRegions: regions
+    });
   }
 
   updateImage(imageId) {
@@ -85,6 +101,8 @@ export class Trace extends React.Component {
             <ImageView
               image={this.state.image}
               onImageClick={this.onImageClick.bind(this)}
+              chosenRegions={this.state.chosenRegions}
+              selectedRegion={this.state.selectedRegion}
             />
           :
             <div
@@ -103,13 +121,18 @@ export class Trace extends React.Component {
                 this.state.selectedRegions.map((r) =>
                   <RegionView
                     className="z-depth-1 np-symbol-image"
-                    key={r}
+                    key={r.idx}
                     image={this.state.image}
-                    region={this.regions[r]}
+                    region={r}
+                    onClick={() => this.setState({
+                      chosenRegions: this.state.chosenRegions.push(r) && this.state.chosenRegions
+                    })}
+                    onMouseEnter={() => this.setState({ selectedRegion: r })}
+                    onMouseLeave={() => this.setState({ selectedRegion: null })}
                   />
               )
               :
-                <p>Click on image to select regions</p>
+                <p>Left click on symbol to add sample</p>
             }
             </div>
           </div>

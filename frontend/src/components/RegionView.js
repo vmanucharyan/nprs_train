@@ -14,9 +14,6 @@ class RegionView extends React.Component {
     const canvas = this.refs.canvas;
     const ctx = canvas.getContext('2d');
 
-    ctx.fillStyle = '#101010';
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-
     const r = props.region;
 
     /* eslint-disable no-underscore-dangle */
@@ -49,13 +46,27 @@ class RegionView extends React.Component {
 
     canvas.width = canvas.height * ar;
 
+    ctx.fillStyle = '#fafafa';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
     // draw thresholded image
-    ctx.drawImage(nc, 0, 0, nc.width, nc.height, 0, 0, canvas.height * ar, canvas.height);
+    ctx.drawImage(
+      nc,
+      0, 0, nc.width, nc.height,
+      5, 5, (canvas.height * ar) - 10, canvas.height - 10
+    );
   }
 
   render() {
     return (
-      <canvas ref="canvas" width="40" height="60" className={this.props.className || ''} />
+      <canvas
+        ref="canvas"
+        width="40" height="60"
+        className={this.props.className || ''}
+        onClick={this.props.onClick}
+        onMouseEnter={this.props.onMouseEnter}
+        onMouseLeave={this.props.onMouseLeave}
+      />
     );
   }
 }
@@ -63,7 +74,10 @@ class RegionView extends React.Component {
 RegionView.propTypes = {
   image: React.PropTypes.object,
   region: React.PropTypes.object,
-  className: React.PropTypes.string
+  className: React.PropTypes.string,
+  onClick: React.PropTypes.func,
+  onMouseEnter: React.PropTypes.func,
+  onMouseLeave: React.PropTypes.func
 };
 
 export default RegionView;
