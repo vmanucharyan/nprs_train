@@ -2,6 +2,10 @@
 
 import React from 'react';
 
+
+/**
+ * Presentational component
+ */
 class ImageView extends React.Component {
   constructor(props) {
     super(props);
@@ -27,7 +31,7 @@ class ImageView extends React.Component {
     }
 
     if ((newProps.chosenRegions !== this.props.chosenRegions) ||
-        (newProps.selectedRegion) !== this.props.selectedRegion) {
+        (newProps.selectedRegion !== this.props.selectedRegion)) {
       this.redrawImage(
         this.state.imagePos,
         this.state.zoom,
