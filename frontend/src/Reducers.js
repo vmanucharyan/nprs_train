@@ -8,7 +8,8 @@ const initialState = {
   trace: null,
   selectedSamples: new Set(),
   chosenSamples: new Set(),
-  pointSamples: []
+  pointSamples: [],
+  appState: Actions.AppState.LOADING
 };
 
 export default function teacherApp(state = initialState, action) {
@@ -22,7 +23,10 @@ export default function teacherApp(state = initialState, action) {
     case Actions.RECEIVE_IMAGE:
       return Object.assign({}, state, {
         loadingImage: false,
-        image: action.image
+        image: action.image,
+        appState: state.loadingTrace
+          ? Actions.AppState.LOADING
+          : Actions.AppState.COLLECT_SAMPLES
       });
 
     case Actions.REQUEST_TRACE:
@@ -33,7 +37,10 @@ export default function teacherApp(state = initialState, action) {
     case Actions.RECEIVE_TRACE:
       return Object.assign({}, state, {
         loadingTrace: false,
-        trace: action.trace
+        trace: action.trace,
+        appState: state.loadingImage
+          ? Actions.AppState.LOADING
+          : Actions.AppState.COLLECT_SAMPLES
       });
 
     case Actions.CHOOSE_SAMPLE:
@@ -64,6 +71,11 @@ export default function teacherApp(state = initialState, action) {
     case Actions.SELECT_POINT:
       return Object.assign({}, state, {
         pointSamples: state.trace.regionsMap[action.point.y][action.point.x]
+      });
+
+    case Actions.GOTO_STATE:
+      return Object.assign({}, state, {
+        appState: action.newState
       });
 
     default:

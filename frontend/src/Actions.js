@@ -18,6 +18,19 @@ export const UNSELECT_SAMPLE = 'UNSELECT_SAMPLE';
 
 export const SELECT_POINT = 'SELECT_POINT';
 
+export const GOTO_STATE = 'GOTO_STATE';
+
+export const COMMIT_SAMPLES = 'COMMIT_SAMPLES';
+
+/**
+ * Other contants
+ */
+export const AppState = {
+  LOADING: 'LOADING',
+  COLLECT_SAMPLES: 'COLLECT_SAMPLES',
+  REVIEW_SAMPLES: 'REVIEW_SAMPLES'
+};
+
 /*
  * action creators
  */
@@ -127,5 +140,19 @@ export function selectPoint(point) {
   return {
     type: SELECT_POINT,
     point
+  };
+}
+
+export function goToState(newState) {
+  return {
+    type: GOTO_STATE,
+    newState
+  };
+}
+
+export function commitSamples(samples) {
+  return {
+    type: GOTO_STATE,
+    samples
   };
 }

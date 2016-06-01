@@ -2,10 +2,6 @@
 
 import React from 'react';
 
-
-/**
- * Presentational component
- */
 class ImageView extends React.Component {
   constructor(props) {
     super(props);
@@ -23,9 +19,6 @@ class ImageView extends React.Component {
   }
 
   componentWillReceiveProps(newProps) {
-    console.log('ImageView receive props');
-    console.log(newProps);
-
     if (newProps.image !== this.props.image) {
       this.updateImage(newProps.image);
     }
@@ -157,7 +150,10 @@ class ImageView extends React.Component {
     canvas.width = canvas.clientWidth;
     canvas.height = canvas.clientHeight;
 
-    const z = canvas.height / img.height * 0.95;
+    const zh = canvas.height / img.height;
+    const zw = canvas.width / img.width;
+    const z = Math.min(zh, zw);
+
     const p = {
       x: Math.abs(canvas.width - img.width * z) * 0.5,
       y: Math.abs(canvas.height - img.height * z) * 0.5
@@ -170,9 +166,6 @@ class ImageView extends React.Component {
   }
 
   redrawImage(pos, zoom, chosenRegions_, selectedRegion) {
-    console.log('redrawing image');
-    console.log(selectedRegion);
-
     const chosenRegions = chosenRegions_ || this.props.chosenRegions;
 
     const canvas = this.refs.canvas;
@@ -212,10 +205,10 @@ class ImageView extends React.Component {
     const drawRegion = (r, style) => {
       /* eslint-disable no-underscore-dangle,  */
       const b = r.bounds;
-      const x = b._field0.x;
-      const y = b._field0.y;
-      const width = b._field1.x - b._field0.x;
-      const height = b._field1.y - b._field0.y;
+      const x = b._field0.x - 1;
+      const y = b._field0.y - 1;
+      const width = b._field1.x - b._field0.x + 2;
+      const height = b._field1.y - b._field0.y + 2;
 
       ctx.beginPath();
       ctx.lineWidth = '1';
@@ -229,7 +222,6 @@ class ImageView extends React.Component {
     regions.forEach((r) => drawRegion(r, 'red'));
 
     if (selectedRegion_) {
-      console.log('drawing selected region');
       drawRegion(selectedRegion_, 'teal');
     }
   }

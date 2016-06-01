@@ -8,7 +8,7 @@ import { fetchImage, fetchTrace } from '../Actions';
 const store = configureStore();
 
 store.subscribe(() => {
-  console.log('store state changed');
+  console.log('state changed');
   console.log(store.getState());
 });
 

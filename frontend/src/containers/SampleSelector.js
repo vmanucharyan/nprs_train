@@ -1,19 +1,16 @@
-/* eslint-disable react/jsx-no-bind */
-
 import React from 'react';
 import { connect } from 'react-redux';
 import ImageView from '../components/ImageView';
 import RegionView from '../components/RegionView';
-import CommitSamples from '../components/CommitSamples';
 
 import {
   selectSample,
   unselectSample,
   chooseSample,
-  selectPoint
+  selectPoint,
+  goToState,
+  AppState
 } from '../Actions';
-
-const $ = window.$;
 
 export class SampleSelector extends React.Component {
   constructor(props) {
@@ -21,10 +18,7 @@ export class SampleSelector extends React.Component {
     this.onImageClick = this.onImageClick.bind(this);
     this.onImageClick = this.onImageClick.bind(this);
     this.onRegionClick = this.onRegionClick.bind(this);
-  }
-
-  componentDidMount() {
-    $('.modal-trigger').leanModal();
+    this.onCommitButtonClicked = this.onCommitButtonClicked.bind(this);
   }
 
   onImageClick(e) {
@@ -34,24 +28,22 @@ export class SampleSelector extends React.Component {
 
   onRegionClick(ridx) {
     const { dispatch } = this.props;
-
-    console.log('region click');
-    console.log(ridx);
-
     dispatch(chooseSample(ridx));
   }
 
-  render() {
-    console.log('render SampleSelector');
-    console.log(this.props);
+  onCommitButtonClicked() {
+    const { dispatch } = this.props;
+    dispatch(goToState(AppState.REVIEW_SAMPLES));
+  }
 
+  render() {
     const { trace, image, selectedSamples, chosenSamples } = this.props;
 
     return (
       <section className="np-trace-body np-fullscreen">
         <ImageView
           image={image}
-          onImageClick={this.onImageClick.bind(this)}
+          onImageClick={this.onImageClick}
           chosenRegions={chosenSamples.toArray().map((r) => trace.regions[r])}
           selectedRegion={
             selectedSamples.size > 0
@@ -86,7 +78,7 @@ export class SampleSelector extends React.Component {
           <a
             href="/#/trace"
             className="btn-floating btn-large"
-            onClick={() => window.$('#commitModal').openModal()}
+            onClick={this.onCommitButtonClicked}
           >
             <i className="large material-icons">send</i>
           </a>
@@ -97,19 +89,6 @@ export class SampleSelector extends React.Component {
               </a>
             </li>
           </ul>
-        </div>
-        <div id="commitModal" className="modal fixed-footer">
-          <div className="modal-content">
-            <CommitSamples />
-          </div>
-          <div className="modal-footer">
-            <a
-              href="/#/trace"
-              className=" modal-action modal-close waves-effect waves-green btn-flat"
-            >
-              Agree
-            </a>
-          </div>
         </div>
       </section>
     );
