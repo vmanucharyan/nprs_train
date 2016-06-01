@@ -2,6 +2,8 @@ class SourceImage < ActiveRecord::Base
   include Paperclip::Glue
   include Grape::Entity::DSL
 
+  has_many :symbol_samples
+
   has_attached_file :picture, styles: {
     medium: "400x400>",
     thumb: "200x200>",
@@ -42,6 +44,7 @@ class SourceImage < ActiveRecord::Base
       Rails.logger.info("running command: nprs-trace #{self.picture.path} #{tmp_name}")
 
       `nprs-trace #{self.picture.path} #{tmp_name}`
+      throw 'Failed to create trace' unless $?.success?
 
       trace_file = File::new(tmp_name)
       self.update(trace: trace_file)
