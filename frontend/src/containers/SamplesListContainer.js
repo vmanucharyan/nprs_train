@@ -1,17 +1,18 @@
 import React from 'react';
 import { connect } from 'react-redux';
 
-import { unchooseSample, commitSamples, goToState, AppState } from '../Actions';
+import { unchooseSample, commitSamples, goToState, AppState, markSample } from '../Actions';
 
-import SamplesForm from '../components/SamplesForm';
+import SamplesList from '../components/SamplesList';
 
-class SamplesReview extends React.Component {
+class SamplesListContainer extends React.Component {
   constructor(props) {
     super(props);
 
     this.onRemoveSample = this.onRemoveSample.bind(this);
     this.onCommit = this.onCommit.bind(this);
     this.onCancel = this.onCancel.bind(this);
+    this.onMarkChanged = this.onMarkChanged.bind(this);
   }
 
   onRemoveSample(sampleIdx) {
@@ -20,9 +21,14 @@ class SamplesReview extends React.Component {
   }
 
   onCommit() {
+    const { dispatch, chosenSamples, sampleMarks } = this.props;
+    dispatch(commitSamples(chosenSamples, sampleMarks));
+  }
+
+  onMarkChanged(sampleIdx, e) {
+    console.log('onMarkChanged');
     const { dispatch } = this.props;
-    dispatch(commitSamples(this.props.chosenSamples)
-      .then(dispatch()));
+    dispatch(markSample(sampleIdx, e.key.toUpperCase()));
   }
 
   onCancel() {
@@ -31,24 +37,27 @@ class SamplesReview extends React.Component {
   }
 
   render() {
-    const { chosenSamples, image, trace } = this.props;
+    const { chosenSamples, image, trace, sampleMarks } = this.props;
 
     return (
-      <SamplesForm
+      <SamplesList
         chosenSamples={chosenSamples}
         image={image}
         trace={trace}
+        sampleMarks={sampleMarks}
         onRemoveSample={this.onRemoveSample}
         onCancel={this.onCancel}
         onCommit={this.onCommit}
+        onMarkChanged={this.onMarkChanged}
       />
     );
   }
 }
 
-SamplesReview.propTypes = {
+SamplesListContainer.propTypes = {
   dispatch: React.PropTypes.func.isRequired,
   chosenSamples: React.PropTypes.array.isRequired,
+  sampleMarks: React.PropTypes.object.isRequired,
   image: React.PropTypes.object.isRequired,
   trace: React.PropTypes.object.isRequired
 };
@@ -59,8 +68,9 @@ function mapStateToProps(state) {
       Object.assign({}, state.trace.regions[sidx], { index: sidx })
     ).toArray(),
     image: state.image,
-    trace: state.trace
+    trace: state.trace,
+    sampleMarks: state.sampleMarks
   };
 }
 
-export default connect(mapStateToProps)(SamplesReview);
+export default connect(mapStateToProps)(SamplesListContainer);

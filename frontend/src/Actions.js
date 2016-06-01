@@ -1,4 +1,5 @@
 import work from 'webworkify';
+import request from 'superagent';
 
 /*
  * action types
@@ -16,11 +17,14 @@ export const SELECT_SAMPLE = 'SELECT_SAMPLE';
 export const SELECT_SAMPELS = 'SELECT_SAMPELS';
 export const UNSELECT_SAMPLE = 'UNSELECT_SAMPLE';
 
+export const MARK_SAMPLE = 'MARK_SAMPLE';
+
 export const SELECT_POINT = 'SELECT_POINT';
 
 export const GOTO_STATE = 'GOTO_STATE';
 
-export const COMMIT_SAMPLES = 'COMMIT_SAMPLES';
+export const POST_SAMPLES_START = 'POST_SAMPLES_START';
+export const POST_SAMPLES_END = 'POST_SAMPLES_END';
 
 /**
  * Other contants
@@ -150,9 +154,53 @@ export function goToState(newState) {
   };
 }
 
-export function commitSamples(samples) {
+export function sendCommitSamples(samples) {
   return {
-    type: GOTO_STATE,
+    type: POST_SAMPLES_START,
     samples
+  };
+}
+
+export function endCommitSamples(res) {
+  return {
+    type: POST_SAMPLES_END,
+    res
+  };
+}
+
+export function commitSamples(samples, marks) {
+  return (dispatch) => {
+    /* eslint-disable no-underscore-dangle */
+    const payload = {
+      source_image_id: 53,
+      samples: samples.map((s) => Object.assign({}, s, {
+        bounds: {
+          x: s.bounds._field0.x,
+          y: s.bounds._field0.y,
+          width: s.bounds._field1.x - s.bounds._field0.x,
+          height: s.bounds._field1.y - s.bounds._field0.y
+        },
+        symbol: marks.get(s.index),
+        cser_light_features: s.features
+      }))
+    };
+    /* eslint-enable no-underscore-dangle */
+
+    dispatch(sendCommitSamples(samples));
+    request
+      .post('/api/symbol_samples')
+      .send(payload)
+      .set('Accept', 'application/json')
+      .end((err, res) => {
+        dispatch(endCommitSamples(res));
+      });
+  };
+}
+
+export function markSample(sampleIdx, symbol) {
+  return {
+    type: MARK_SAMPLE,
+    sampleIdx,
+    symbol
   };
 }

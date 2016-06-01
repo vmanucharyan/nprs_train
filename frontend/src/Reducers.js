@@ -1,22 +1,11 @@
 import { Set } from 'immutable';
 import * as Actions from './Actions';
 
-const initialState = {
-  loadingImage: true,
-  loadingTrace: true,
-  image: null,
-  trace: null,
-  selectedSamples: new Set(),
-  chosenSamples: new Set(),
-  pointSamples: [],
-  appState: Actions.AppState.LOADING
-};
-
-export default function teacherApp(state = initialState, action) {
+export default function teacherApp(state, action) {
   switch (action.type) {
 
     case Actions.REQUEST_IMAGE:
-      return Object.assign({}, initialState, {
+      return Object.assign({}, state, {
         loadingImage: true
       });
 
@@ -53,6 +42,11 @@ export default function teacherApp(state = initialState, action) {
         chosenSamples: state.chosenSamples.remove(action.regionIdx)
       });
 
+    case Actions.MARK_SAMPLE:
+      return Object.assign({}, state, {
+        sampleMarks: state.sampleMarks.set(action.sampleIdx, action.symbol)
+      });
+
     case Actions.SELECT_SAMPLE:
       return Object.assign({}, state, {
         selectedSamples: state.selectedSamples.add(action.regionIdx)
@@ -76,6 +70,16 @@ export default function teacherApp(state = initialState, action) {
     case Actions.GOTO_STATE:
       return Object.assign({}, state, {
         appState: action.newState
+      });
+
+    case Actions.POST_SAMPLES_START:
+      return Object.assign({}, state, {
+        appState: Actions.AppState.LOADING
+      });
+
+    case Actions.POST_SAMPLES_END:
+      return Object.assign({}, state, {
+        appState: Actions.AppState.REVIEW_SAMPLES
       });
 
     default:

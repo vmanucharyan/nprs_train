@@ -2,7 +2,7 @@ import React from 'react';
 import { connect } from 'react-redux';
 import SampleSelector from './SampleSelector';
 import Preloader from '../components/Preloader';
-import SamplesReview from './SamplesReview';
+import SamplesListContainer from './SamplesListContainer';
 import { AppState } from '../Actions';
 
 const App = ({ appState, image, trace, chosenSamples }) => {
@@ -28,7 +28,7 @@ const App = ({ appState, image, trace, chosenSamples }) => {
 
     case AppState.REVIEW_SAMPLES:
       return (
-        <SamplesReview
+        <SamplesListContainer
           image={image}
           trace={trace}
           chosenSamples={chosenSamples.toArray()}
