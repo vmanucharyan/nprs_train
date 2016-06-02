@@ -8,7 +8,12 @@ class V1::SourceImages < Grape::API
         present SourceImage.unprocessed.all
       end
       get :first do
-        present SourceImage.unprocessed.first
+        unprocessed = SourceImage.unprocessed
+        if (unprocessed.count > 0)
+          present SourceImage.unprocessed.first
+        else
+          error!({ message: 'no unprocessed images found' }, 404)
+        end
       end
     end
 
@@ -110,11 +115,6 @@ class V1::SourceImages < Grape::API
     desc 'get source images'
     get do
       present SourceImage.all
-    end
-
-    desc 'get random unprocessed source image'
-    get :random do
-      present SourceImage
     end
 
     desc 'post source image'
