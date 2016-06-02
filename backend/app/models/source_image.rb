@@ -10,15 +10,17 @@ class SourceImage < ActiveRecord::Base
 
   has_attached_file :picture, styles: {
     medium: "400x400>",
-    thumb: "200x200>",
-    large: "800x800>"
+    thumb: "200x200>"
   }
   validates_attachment_content_type :picture, content_type: /\Aimage\/.*\Z/
+  process_in_background :picture
 
   has_attached_file :trace, content_type: { content_type: "application/octet-stream" }
   do_not_validate_attachment_file_type :trace
 
-  after_save :compute_trace, :if => :picture_updated_at_changed?
+  after_commit :compute_trace, :if => Proc.new { |record|
+    record.previous_changes.key?(:picture_updated_at)
+  }
 
   entity do
     expose :id
@@ -66,20 +68,7 @@ class SourceImage < ActiveRecord::Base
 
   private
     def compute_trace
-      return if @updating_trace
-      @updating_trace = true
-
-      tmp_name = Dir::Tmpname.create(['trace']) { }
-
-      Rails.logger.info("running command: nprs-trace #{self.picture.path} #{tmp_name}")
-
-      `nprs-trace #{self.picture.path} #{tmp_name}`
-      throw 'Failed to create trace' unless $?.success?
-
-      trace_file = File::new(tmp_name)
-      self.update(trace: trace_file)
-
-      @updating_trace = false
+      ComputeTraceWorker.perform_async(self.id)
     end
 
     def lock_id_and_locked_at_must_be_present_if_locked
