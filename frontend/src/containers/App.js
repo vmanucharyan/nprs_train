@@ -16,7 +16,7 @@ class App extends React.Component {
   render() {
     const { appState, image, trace, chosenSamples, errors } = this.props;
 
-    if (errors.length > 0) {
+    if (appState !== AppState.ERROR && errors.length > 0) {
       this.onErrors();
     }
 
@@ -45,7 +45,7 @@ class App extends React.Component {
           <div className="container">
             <h1>Something went wrong...</h1>
             {
-              errors.map(e => (<p>{e}</p>))
+              errors.map((e, index) => (<p key={index}>{e}</p>))
             }
             <p>Please, try to reload this page</p>
           </div>
