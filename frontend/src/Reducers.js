@@ -11,6 +11,13 @@ export default function teacherApp(state, action) {
       });
 
     case Actions.RECEIVE_IMAGE:
+      if (action.imageId < 0) {
+        return Object.assign({}, state, {
+          appState: Actions.AppState.ERROR,
+          errors: ['failed to fetch unprocessed image']
+        });
+      }
+
       return Object.assign({}, state, {
         loadingImage: false,
         image: action.image,
@@ -83,10 +90,21 @@ export default function teacherApp(state, action) {
     case Actions.POST_SAMPLES_END:
       if (action.err) {
         return Object.assign({}, state, {
-          appState: Actions.AppState.COLLECT_SAMPLES
+          errors: [action.err],
+          appState: Actions.AppState.REVIEW_SAMPLES
         });
       }
       return initialState;
+
+    case Actions.SHOW_ERRORS:
+      return Object.assign({}, state, {
+        errors: action.errors
+      });
+
+    case Actions.CLEAR_ERRORS:
+      return Object.assign({}, state, {
+        errors: []
+      });
 
     default:
       return state;

@@ -15,7 +15,8 @@ export const initialState = {
   chosenSamples: new Set(),
   sampleMarks: new Map(),
   pointSamples: [],
-  appState: AppState.LOADING
+  appState: AppState.LOADING,
+  errors: []
 };
 
 export default function configureStore() {

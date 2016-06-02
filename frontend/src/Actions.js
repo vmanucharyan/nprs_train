@@ -26,8 +26,11 @@ export const GOTO_STATE = 'GOTO_STATE';
 export const POST_SAMPLES_START = 'POST_SAMPLES_START';
 export const POST_SAMPLES_END = 'POST_SAMPLES_END';
 
+export const SHOW_ERRORS = 'SHOW_ERRORS';
+export const CLEAR_ERRORS = 'CLEAR_ERRORS';
+
 /**
- * Other contants
+ * Other constants
  */
 export const AppState = {
   LOADING: 'LOADING',
@@ -88,12 +91,27 @@ export function requestImage(sourceImageId) {
 /*
  * action creators
  */
-export function receiveImage(image, imageId, lockId) {
+
+export function showErrors(errors) {
+  return {
+    type: SHOW_ERRORS,
+    errors
+  };
+}
+
+export function clearErrors() {
+  return {
+    type: CLEAR_ERRORS
+  };
+}
+
+export function receiveImage(image, imageId, lockId, errors) {
   return {
     type: RECEIVE_IMAGE,
     image,
     imageId,
-    lockId
+    lockId,
+    errors
   };
 }
 
@@ -107,30 +125,39 @@ export function fetchImage() {
         console.log('received image');
         console.log(imageRes);
         // fetch unprocessed image
-        if (imageRes.status === 200) {
-          const sourceImage = imageRes.body;
-          request
-            .put(`/api/source_images/${sourceImage.id}/lock`)
-            .end((lockErr, lockRes) => {
-              console.log('received lock');
-              console.log(lockRes);
-              // lock image
-              if (lockRes.status === 200) {
-                const lock = lockRes.body;
-                const imageUrl = sourceImage.picture.original;
-                const img = new Image;
-                img.onload = () => {
-                  dispatch(receiveImage(img, sourceImage.id, lock.lock_id));
-                  dispatch(fetchTrace(sourceImage.id));
-                };
-                img.src = imageUrl;
-              } else {
-                dispatch(receiveImage(null, -1));
-              }
-            });
-        } else {
-          dispatch(receiveImage(null, -1));
+        if (imageErr) {
+          dispatch(receiveImage(null, -1, -1, ['failed to fetch image']));
+          return;
         }
+
+        if (!imageRes || imageRes.status !== 200) {
+          dispatch(receiveImage(null, -1, -1, ['failed to fetch image']));
+          return;
+        }
+
+        const sourceImage = imageRes.body;
+
+        // lock image
+        request
+          .put(`/api/source_images/${sourceImage.id}/lock`)
+          .end((lockErr, lockRes) => {
+            console.log('received lock');
+            console.log(lockRes);
+
+            if (!lockRes || lockRes.status !== 200) {
+              dispatch(receiveImage(null, -1, -1, ['failed to lock image']));
+              return;
+            }
+
+            const lock = lockRes.body;
+            const imageUrl = sourceImage.picture.original;
+            const img = new Image;
+            img.onload = () => {
+              dispatch(receiveImage(img, sourceImage.id, lock.lock_id));
+              dispatch(fetchTrace(sourceImage.id));
+            };
+            img.src = imageUrl;
+          });
       });
   };
 }
@@ -203,6 +230,11 @@ export function commitSamples(samples, marks) {
   return (dispatch, getState) => {
     const state = getState();
 
+    if (!state.chosenSamples.subtract(state.sampleMarks.keys()).isEmpty()) {
+      dispatch(postSamplesEnd(null, 'Not all samples marked'));
+      return;
+    }
+
     /* eslint-disable no-underscore-dangle */
     const payload = {
       samples: samples.map((s) => Object.assign({}, s, {
@@ -229,7 +261,7 @@ export function commitSamples(samples, marks) {
           dispatch(postSamplesEnd(res.body, null));
           dispatch(fetchImage());
         } else {
-          dispatch(postSamplesEnd(null, res.body));
+          dispatch(postSamplesEnd(null, res.body.message));
         }
       });
   };
