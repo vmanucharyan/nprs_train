@@ -1,8 +1,12 @@
 class SourceImage < ActiveRecord::Base
+  LOCK_DURATION_S = 600
+
   include Paperclip::Glue
   include Grape::Entity::DSL
 
   has_many :symbol_samples
+
+  validate :lock_id_and_locked_at_must_be_present_if_locked
 
   has_attached_file :picture, styles: {
     medium: "400x400>",
@@ -14,7 +18,7 @@ class SourceImage < ActiveRecord::Base
   has_attached_file :trace, content_type: { content_type: "application/octet-stream" }
   do_not_validate_attachment_file_type :trace
 
-  after_save :compute_trace
+  after_save :compute_trace, :if => :picture_updated_at_changed?
 
   entity do
     expose :id
@@ -31,6 +35,32 @@ class SourceImage < ActiveRecord::Base
     end
     expose :trace, if: lambda { |p, st| p.trace.present? } do |p|
       p.trace.url
+    end
+    expose :symbol_samples
+    expose :processed
+  end
+
+  scope :unprocessed, -> { where(processed: false, locked: false) }
+
+  def lock
+    if self.locked && (DateTime.now.to_time - self.locked_at.to_time < LOCK_DURATION_S)
+      raise Errors::ImageAlreadyLocked
+    end
+
+    self.update(
+      lock_id: SecureRandom.uuid,
+      locked_at: DateTime.now,
+      locked: true
+    )
+  end
+
+  def add_samples_and_unlock(samples, lock_id)
+    unless self.locked && self.lock_id == lock_id
+      raise Errors::LockValidationFailed
+    end
+    samples.map do |sample|
+      sample.save(sample)
+      sample.id
     end
   end
 
@@ -50,5 +80,27 @@ class SourceImage < ActiveRecord::Base
       self.update(trace: trace_file)
 
       @updating_trace = false
+    end
+
+    def lock_id_and_locked_at_must_be_present_if_locked
+      if self.locked
+        if self.locked_at.blank?
+          errors.add(:lock_id, 'must be present if `locked` is true')
+        end
+        if self.lock_id.blank?
+          errors.add(:lock_id, 'must be present if `locked` is true')
+        end
+      end
+    end
+
+    def lock_id_and_locked_at_must_be_blank_if_not_locked
+      if self.locked
+        if self.locked_at.present?
+          errors.add(:lock_id, 'must be blank if `locked` is false')
+        end
+        if self.lock_id.present?
+          errors.add(:lock_id, 'must be blank if `locked` is false')
+        end
+      end
     end
 end

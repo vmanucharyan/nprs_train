@@ -5,6 +5,5 @@ class Api < Grape::API
 
   mount V1::Ping
   mount V1::SourceImages
-  mount V1::SymbolSamples
 
 end

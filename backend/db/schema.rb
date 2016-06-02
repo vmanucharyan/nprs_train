@@ -11,14 +11,14 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20160601121745) do
+ActiveRecord::Schema.define(version: 20160602073221) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
   create_table "source_images", force: :cascade do |t|
-    t.datetime "created_at",           null: false
-    t.datetime "updated_at",           null: false
+    t.datetime "created_at",                           null: false
+    t.datetime "updated_at",                           null: false
     t.string   "picture_file_name"
     t.string   "picture_content_type"
     t.integer  "picture_file_size"
@@ -27,6 +27,10 @@ ActiveRecord::Schema.define(version: 20160601121745) do
     t.string   "trace_content_type"
     t.integer  "trace_file_size"
     t.datetime "trace_updated_at"
+    t.boolean  "processed",            default: false, null: false
+    t.boolean  "locked",               default: false, null: false
+    t.string   "lock_id"
+    t.datetime "locked_at"
   end
 
   create_table "symbol_samples", force: :cascade do |t|
