@@ -4,7 +4,9 @@ import { Set, Map } from 'immutable';
 import { AppState } from './Actions';
 import teacherApp from './Reducers';
 
-const initialState = {
+export const initialState = {
+  imageId: -1,
+  lock_id: null,
   loadingImage: true,
   loadingTrace: true,
   image: null,

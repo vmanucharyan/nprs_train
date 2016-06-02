@@ -56,7 +56,7 @@ const SamplesList = ({ chosenSamples, image, sampleMarks,
           Back to image
         </a>
         <a className="waves-effect waves-light btn" onClick={onCommit}>
-          <i className="material-icons right">cloud</i>
+          <i className="material-icons right">send</i>
           Commit
         </a>
       </div>

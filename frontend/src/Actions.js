@@ -32,39 +32,9 @@ export const POST_SAMPLES_END = 'POST_SAMPLES_END';
 export const AppState = {
   LOADING: 'LOADING',
   COLLECT_SAMPLES: 'COLLECT_SAMPLES',
-  REVIEW_SAMPLES: 'REVIEW_SAMPLES'
+  REVIEW_SAMPLES: 'REVIEW_SAMPLES',
+  ERROR: 'ERROR'
 };
-
-/*
- * action creators
- */
-export function requestImage(sourceImageId) {
-  return {
-    type: REQUEST_IMAGE,
-    sourceImageId
-  };
-}
-
-/*
- * action creators
- */
-export function receiveImage(image) {
-  return {
-    type: RECEIVE_IMAGE,
-    image
-  };
-}
-
-export function fetchImage(sourceImageId) {
-  return (dispatch) => {
-    dispatch(requestImage(sourceImageId));
-    const img = new Image;
-    img.onload = () => {
-      dispatch(receiveImage(img));
-    };
-    img.src = '/system/source_images/pictures/000/000/053/original/cars_5.png?1464381110';
-  };
-}
 
 export function requestTrace(sourceImageId) {
   return {
@@ -102,6 +72,66 @@ export function fetchTrace(sourceImageId) {
     };
 
     oReq.send();
+  };
+}
+
+/*
+ * action creators
+ */
+export function requestImage(sourceImageId) {
+  return {
+    type: REQUEST_IMAGE,
+    sourceImageId
+  };
+}
+
+/*
+ * action creators
+ */
+export function receiveImage(image, imageId, lockId) {
+  return {
+    type: RECEIVE_IMAGE,
+    image,
+    imageId,
+    lockId
+  };
+}
+
+export function fetchImage() {
+  return (dispatch) => {
+    dispatch(requestImage());
+    request
+      .get('/api/source_images/unprocessed/first')
+      .set('Accept', 'application/json')
+      .end((imageErr, imageRes) => {
+        console.log('received image');
+        console.log(imageRes);
+        // fetch unprocessed image
+        if (imageRes.status === 200) {
+          const sourceImage = imageRes.body;
+          request
+            .put(`/api/source_images/${sourceImage.id}/lock`)
+            .end((lockErr, lockRes) => {
+              console.log('received lock');
+              console.log(lockRes);
+              // lock image
+              if (lockRes.status === 200) {
+                const lock = lockRes.body;
+                const imageUrl = sourceImage.picture.original;
+                const img = new Image;
+                img.onload = () => {
+                  dispatch(receiveImage(img, sourceImage.id, lock.lock_id));
+                  dispatch(fetchTrace(sourceImage.id));
+                };
+                img.src = imageUrl;
+              } else {
+                dispatch(receiveImage(null, -1));
+              }
+            });
+        } else {
+          dispatch(receiveImage(null, -1));
+        }
+      });
   };
 }
 
@@ -154,25 +184,27 @@ export function goToState(newState) {
   };
 }
 
-export function sendCommitSamples(samples) {
+export function postSamplesStart(samples) {
   return {
     type: POST_SAMPLES_START,
     samples
   };
 }
 
-export function endCommitSamples(res) {
+export function postSamplesEnd(res, err) {
   return {
     type: POST_SAMPLES_END,
-    res
+    res,
+    err
   };
 }
 
 export function commitSamples(samples, marks) {
-  return (dispatch) => {
+  return (dispatch, getState) => {
+    const state = getState();
+
     /* eslint-disable no-underscore-dangle */
     const payload = {
-      source_image_id: 53,
       samples: samples.map((s) => Object.assign({}, s, {
         bounds: {
           x: s.bounds._field0.x,
@@ -182,17 +214,23 @@ export function commitSamples(samples, marks) {
         },
         symbol: marks.get(s.index),
         cser_light_features: s.features
-      }))
+      })),
+      lock_id: state.lockId
     };
     /* eslint-enable no-underscore-dangle */
 
-    dispatch(sendCommitSamples(samples));
+    dispatch(postSamplesStart(samples));
     request
-      .post('/api/symbol_samples')
+      .post(`/api/source_images/${state.imageId}/symbol_samples`)
       .send(payload)
       .set('Accept', 'application/json')
       .end((err, res) => {
-        dispatch(endCommitSamples(res));
+        if (res.status === 200 || res.status === 201) {
+          dispatch(postSamplesEnd(res.body, null));
+          dispatch(fetchImage());
+        } else {
+          dispatch(postSamplesEnd(null, res.body));
+        }
       });
   };
 }

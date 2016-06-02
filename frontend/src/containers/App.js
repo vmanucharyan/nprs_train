@@ -8,16 +8,7 @@ import { AppState } from '../Actions';
 const App = ({ appState, image, trace, chosenSamples }) => {
   switch (appState) {
     case AppState.LOADING:
-      return (
-        <section className="np-trace-body np-fullscreen">
-          <div
-            className="fixed-action-btn"
-            style={{ top: '50%', left: '50%', marginTop: '-45px' }}
-          >
-            <Preloader />
-          </div>
-        </section>
-      );
+      return (<Preloader />);
 
     case AppState.COLLECT_SAMPLES:
       return (
@@ -36,7 +27,12 @@ const App = ({ appState, image, trace, chosenSamples }) => {
       );
 
     default:
-      return (<h1>Something went wrong...</h1>);
+      return (
+        <div>
+          <h1>Something went wrong...</h1>
+          <p>Please, try to reload this page</p>
+        </div>
+      );
   }
 };
 

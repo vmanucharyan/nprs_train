@@ -1,4 +1,5 @@
 import { Set } from 'immutable';
+import { initialState } from './Store';
 import * as Actions from './Actions';
 
 export default function teacherApp(state, action) {
@@ -13,6 +14,8 @@ export default function teacherApp(state, action) {
       return Object.assign({}, state, {
         loadingImage: false,
         image: action.image,
+        imageId: action.imageId,
+        lockId: action.lockId,
         appState: state.loadingTrace
           ? Actions.AppState.LOADING
           : Actions.AppState.COLLECT_SAMPLES
@@ -78,9 +81,12 @@ export default function teacherApp(state, action) {
       });
 
     case Actions.POST_SAMPLES_END:
-      return Object.assign({}, state, {
-        appState: Actions.AppState.REVIEW_SAMPLES
-      });
+      if (action.err) {
+        return Object.assign({}, state, {
+          appState: Actions.AppState.COLLECT_SAMPLES
+        });
+      }
+      return initialState;
 
     default:
       return state;
