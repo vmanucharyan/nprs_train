@@ -66,7 +66,10 @@ function mapStateToProps(state) {
   return {
     chosenSamples: state.chosenSamples.map(sidx =>
       Object.assign({}, state.trace.regions[sidx], { index: sidx })
-    ).toArray(),
+    )
+    .toArray()
+    .sort((a, b) => a.index - b.index),
+
     image: state.image,
     trace: state.trace,
     sampleMarks: state.sampleMarks
