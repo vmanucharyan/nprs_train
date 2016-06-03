@@ -43,9 +43,15 @@ group :development do
 
   # Spring speeds up development by keeping your application running in the background. Read more: https://github.com/rails/spring
   gem 'spring'
+
+  gem 'capistrano'
+  gem 'capistrano-bundler'
+  gem 'capistrano-rails'
+
+  # Add this if you're using rbenv
+  gem 'capistrano-rbenv', github: "capistrano/rbenv"
 end
 
-gem 'react-rails'
 gem 'grape'
 gem "paperclip", "~> 5.0.0.beta1"
 gem 'devise'
@@ -55,3 +61,4 @@ gem 'grape-entity'
 gem 'sidekiq'
 gem 'sinatra', :require => nil
 gem 'delayed_paperclip'
+gem "passenger", ">= 5.0.25", require: "phusion_passenger/rack_handler"

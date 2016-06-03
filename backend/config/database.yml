@@ -19,5 +19,5 @@ production:
   encoding: unicode
   database: nprs_train_production
   pool: 5
-  username: <%= ENV['PG_USERNAME'] %>
-  password: <%= ENV['PG_PASSWORD'] %>
+  username: <%= ENV['NPRS_TRAIN_PG_USERNAME'] %>
+  password: <%= ENV['NPRS_TRAIN_PG_PASSWORD'] %>

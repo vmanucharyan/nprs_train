@@ -36,6 +36,8 @@ Rails.application.configure do
   # Raises helpful error messages.
   config.assets.raise_runtime_errors = true
 
+  config.secret = 'svSDsNC74cQxLR6K93Sk36MBdQ5sFq3To5VnPkGOJ/NrfydZjQnxECNN7Mthdx976AY'
+
   # Raises error for missing translations
   # config.action_view.raise_on_missing_translations = true
 end
