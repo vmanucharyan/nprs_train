@@ -1,0 +1,6 @@
+[submodule "nprs_train_frontend"]
+	path = nprs_train_frontend
+	url = git@github.com:vmanucharyan/nprs_train_frontend.git
+[submodule "nprs_train_backend"]
+	path = nprs_train_backend
+	url = git@github.com:vmanucharyan/nprs_train_backend.git
